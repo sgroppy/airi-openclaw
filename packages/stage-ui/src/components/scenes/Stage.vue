@@ -501,24 +501,16 @@ onMounted(async () => {
 function handleWaveEvent(event: CustomEvent<{ text: string, emotion?: string }>) {
   console.log('👋 Wave event received:', event.detail)
 
-  // Trigger wave animation on VRM
+  // Trigger wave expression on VRM
   if (vrmViewerRef.value && stageModelRenderer.value === 'vrm') {
-    // Access the VRM model and animate right arm
-    const vrm = (vrmViewerRef.value as any).vrm
-    if (vrm?.humanoid) {
-      const rightArm = vrm.humanoid.getNormalizedBoneNode('rightUpperArm')
-      if (rightArm) {
-        // Raise arm
-        rightArm.rotation.z = Math.PI * 0.7 // Raise arm up
-        console.log('👋 Waving!')
+    console.log('👋 Waving with happy expression!')
+    vrmViewerRef.value?.setExpression?.('happy', 1)
 
-        // Lower arm after 2 seconds
-        setTimeout(() => {
-          rightArm.rotation.z = 0
-          console.log('👋 Wave complete')
-        }, 2000)
-      }
-    }
+    // Reset after 2 seconds
+    setTimeout(() => {
+      vrmViewerRef.value?.setExpression?.('neutral', 1)
+      console.log('👋 Wave complete')
+    }, 2000)
   }
 }
 
@@ -527,38 +519,32 @@ function handleLipSyncEvent(event: CustomEvent<{ text: string, duration: number 
   console.log('🎭 vrmViewerRef:', !!vrmViewerRef.value)
   console.log('🎭 stageModelRenderer:', stageModelRenderer.value)
 
-  // Animate mouth for VRM
+  // Animate mouth for VRM using setExpression
   if (vrmViewerRef.value && stageModelRenderer.value === 'vrm') {
-    const vrm = (vrmViewerRef.value as any).vrm
-    console.log('🎭 VRM:', !!vrm)
-    console.log('🎭 expressionManager:', !!vrm?.expressionManager)
+    console.log('🎭 Animating mouth with setExpression!')
 
-    if (vrm?.expressionManager) {
-      console.log('🎭 Animating mouth!')
+    // Use the exposed setExpression method
+    const duration = event.detail.duration || 2000
+    const interval = 150
+    let elapsed = 0
 
-      // Simple mouth animation - open and close
-      const duration = event.detail.duration || 2000
-      const interval = 150 // Change mouth shape every 150ms
-      let elapsed = 0
+    const animateMouth = setInterval(() => {
+      elapsed += interval
 
-      const animateMouth = setInterval(() => {
-        elapsed += interval
+      // Alternate between surprised (mouth open) and neutral
+      if (Math.floor(elapsed / interval) % 2 === 0) {
+        vrmViewerRef.value?.setExpression?.('surprised', 0.6)
+      }
+      else {
+        vrmViewerRef.value?.setExpression?.('neutral', 0.3)
+      }
 
-        // Alternate between open and closed
-        if (Math.floor(elapsed / interval) % 2 === 0) {
-          vrm.expressionManager.setValue('aa', 0.6) // Open mouth
-        }
-        else {
-          vrm.expressionManager.setValue('aa', 0.2) // Slightly closed
-        }
-
-        if (elapsed >= duration) {
-          clearInterval(animateMouth)
-          vrm.expressionManager.setValue('aa', 0) // Close mouth
-          console.log('🎭 Lip sync complete')
-        }
-      }, interval)
-    }
+      if (elapsed >= duration) {
+        clearInterval(animateMouth)
+        vrmViewerRef.value?.setExpression?.('neutral', 1)
+        console.log('🎭 Lip sync complete')
+      }
+    }, interval)
   }
 }
 
