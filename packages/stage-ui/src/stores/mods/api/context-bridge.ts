@@ -166,9 +166,18 @@ export const useContextBridgeStore = defineStore('mods:api:context-bridge', () =
 
         console.log('🎙️ speak:text received:', text.substring(0, 50))
 
-        // Skip if speech not configured
+        // Trigger speaking animation immediately (even if TTS not configured)
+        nowSpeaking.value = true
+        console.log('🎭 VRM animation triggered!')
+
+        // Skip TTS if speech not configured, but still animate
         if (!speechStore.configured) {
-          console.warn('Speech not configured, skipping speak:text')
+          console.warn('Speech not configured, animating without audio')
+          // Keep animation for 2 seconds then stop
+          setTimeout(() => {
+            nowSpeaking.value = false
+            console.log('🎭 VRM animation stopped')
+          }, 2000)
           return
         }
 
