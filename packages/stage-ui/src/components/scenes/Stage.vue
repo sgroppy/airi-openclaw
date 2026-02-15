@@ -499,6 +499,13 @@ onMounted(async () => {
 
   // Listen for speak:text audio events from OpenClaw
   window.addEventListener('airi:speak:text:audio', handleSpeakTextAudio as EventListener)
+
+  // Expose vrmViewerRef to window for debugging
+  Object.defineProperty(window, 'vrmViewerRef', {
+    get: () => vrmViewerRef.value,
+    configurable: true,
+  })
+  console.log('🎭 vrmViewerRef exposed to window for debugging')
 })
 
 function handleWaveEvent(event: CustomEvent<{ text: string, emotion?: string }>) {
