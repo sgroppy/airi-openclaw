@@ -170,6 +170,11 @@ export const useContextBridgeStore = defineStore('mods:api:context-bridge', () =
         nowSpeaking.value = true
         console.log('🎭 VRM animation triggered!')
 
+        // Also trigger a visual alert for debugging
+        if (typeof window !== 'undefined') {
+          window.alert(`🎭 SPEAK:TEXT RECEIVED!\n\n${text.substring(0, 100)}`)
+        }
+
         // Skip TTS if speech not configured, but still animate
         if (!speechStore.configured) {
           console.warn('Speech not configured, animating without audio')
