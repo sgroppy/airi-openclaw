@@ -10,6 +10,7 @@ import { nanoid } from 'nanoid'
 import { defineStore, storeToRefs } from 'pinia'
 import { ref, toRaw, watch } from 'vue'
 
+import { useSpeakingStore } from '../../audio'
 import { useChatOrchestratorStore } from '../../chat'
 import { CHAT_STREAM_CHANNEL_NAME, CONTEXT_CHANNEL_NAME } from '../../chat/constants'
 import { useChatContextStore } from '../../chat/context-store'
@@ -143,6 +144,71 @@ export const useContextBridgeStore = defineStore('mods:api:context-bridge', () =
               console.error('Error ingesting text input via context bridge:', err)
             }
           })
+        }
+      }))
+
+      // Handle speak:text event - direct TTS bypass (OpenClaw integration)
+      disposeHookFns.value.push(serverChannelStore.onEvent('speak:text', async (event) => {
+        const { text, voiceId, emotion, speed, metadata } = event.data
+
+        console.log('🎙️ speak:text received:', text.substring(0, 50))
+
+        // Skip if speech not configured
+        if (!speechStore.configured) {
+          console.warn('Speech not configured, skipping speak:text')
+          return
+        }
+
+        try {
+          // Get speech provider
+          const speechProvider = await providersStore.getProviderInstance<any>(speechStore.activeSpeechProvider)
+          if (!speechProvider) {
+            console.error('Failed to get speech provider')
+            return
+          }
+
+          // Use provided voice or fallback to configured voice
+          const voice = voiceId || speechStore.activeSpeechVoiceId.value
+          const model = speechStore.activeSpeechModel.value
+
+          // Generate speech
+          const audioBuffer = await speechStore.speech(
+            speechProvider,
+            model,
+            text,
+            voice,
+            {
+              speed: speed || speechStore.rate.value,
+              pitch: speechStore.pitch.value,
+            },
+          )
+
+          // Play audio through audio system
+          const blob = new Blob([audioBuffer], { type: 'audio/mpeg' })
+          const url = URL.createObjectURL(blob)
+          const audio = new Audio(url)
+
+          // Trigger speaking state for VRM animation
+          const speakingStore = useSpeakingStore()
+          speakingStore.startSpeaking()
+
+          audio.onended = () => {
+            speakingStore.stopSpeaking()
+            URL.revokeObjectURL(url)
+          }
+
+          audio.onerror = (err) => {
+            console.error('Audio playback error:', err)
+            speakingStore.stopSpeaking()
+            URL.revokeObjectURL(url)
+          }
+
+          await audio.play()
+
+          console.log('✅ speak:text completed')
+        }
+        catch (err) {
+          console.error('Error processing speak:text:', err)
         }
       }))
 
