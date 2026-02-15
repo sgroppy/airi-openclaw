@@ -490,7 +490,34 @@ if (typeof window !== 'undefined') {
 onMounted(async () => {
   db.value = drizzle({ connection: { bundles: getImportUrlBundles() } })
   await db.value.execute(`CREATE TABLE memory_test (vec FLOAT[768]);`)
+
+  // Listen for wave events from OpenClaw
+  window.addEventListener('airi:wave', handleWaveEvent as EventListener)
 })
+
+function handleWaveEvent(event: CustomEvent<{ text: string, emotion?: string }>) {
+  console.log('👋 Wave event received:', event.detail)
+
+  // Trigger wave animation on VRM
+  if (vrmViewerRef.value && stageModelRenderer.value === 'vrm') {
+    // Access the VRM model and animate right arm
+    const vrm = (vrmViewerRef.value as any).vrm
+    if (vrm?.humanoid) {
+      const rightArm = vrm.humanoid.getNormalizedBoneNode('rightUpperArm')
+      if (rightArm) {
+        // Raise arm
+        rightArm.rotation.z = Math.PI * 0.7 // Raise arm up
+        console.log('👋 Waving!')
+
+        // Lower arm after 2 seconds
+        setTimeout(() => {
+          rightArm.rotation.z = 0
+          console.log('👋 Wave complete')
+        }, 2000)
+      }
+    }
+  }
+}
 
 function canvasElement() {
   if (stageModelRenderer.value === 'live2d')
@@ -515,6 +542,9 @@ onUnmounted(() => {
 
   chatHookCleanups.forEach(dispose => dispose?.())
   viewUpdateCleanups.forEach(dispose => dispose?.())
+
+  // Clean up wave event listener
+  window.removeEventListener('airi:wave', handleWaveEvent as EventListener)
 })
 
 defineExpose({

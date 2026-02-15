@@ -170,6 +170,13 @@ export const useContextBridgeStore = defineStore('mods:api:context-bridge', () =
         nowSpeaking.value = true
         console.log('🎭 VRM animation triggered!')
 
+        // Trigger wave animation (if VRM is loaded)
+        if (typeof window !== 'undefined') {
+          // Dispatch custom event for wave animation
+          window.dispatchEvent(new CustomEvent('airi:wave', { detail: { text, emotion: _emotion } }))
+          console.log('👋 Wave event dispatched!')
+        }
+
         // Also trigger a visual alert for debugging (toggle with window.__AIRI_DEBUG_ALERT__ = true)
         if (typeof window !== 'undefined' && (window as any).__AIRI_DEBUG_ALERT__) {
           window.alert(`🎭 SPEAK:TEXT RECEIVED!\n\n${text.substring(0, 100)}`)
