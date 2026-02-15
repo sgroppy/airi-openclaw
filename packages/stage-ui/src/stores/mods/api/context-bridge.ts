@@ -170,8 +170,8 @@ export const useContextBridgeStore = defineStore('mods:api:context-bridge', () =
         nowSpeaking.value = true
         console.log('🎭 VRM animation triggered!')
 
-        // Also trigger a visual alert for debugging
-        if (typeof window !== 'undefined') {
+        // Also trigger a visual alert for debugging (toggle with window.__AIRI_DEBUG_ALERT__ = true)
+        if (typeof window !== 'undefined' && (window as any).__AIRI_DEBUG_ALERT__) {
           window.alert(`🎭 SPEAK:TEXT RECEIVED!\n\n${text.substring(0, 100)}`)
         }
 
