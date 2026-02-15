@@ -8,8 +8,6 @@ import type {
 } from './middlewares'
 import type { AuthenticatedPeer, Peer } from './types'
 
-import superjson from 'superjson'
-
 import { availableLogLevelStrings, Format, LogLevelString, logLevelStringToLogLevelMap, useLogg } from '@guiiai/logg'
 import { MessageHeartbeat, MessageHeartbeatKind, WebSocketEventSource } from '@proj-airi/server-shared/types'
 import { defineWebSocketHandler, H3 } from 'h3'
@@ -199,9 +197,10 @@ export function setupApp(options?: {
     message: (peer, message) => {
       const authenticatedPeer = peers.get(peer.id)
       let event: WebSocketEvent
+      const rawMessage = message.text()
 
       try {
-        event = message.json() as WebSocketEvent
+        event = JSON.parse(rawMessage) as WebSocketEvent
       }
       catch (err) {
         const errorMessage = err instanceof Error ? err.message : String(err)
@@ -351,7 +350,7 @@ export function setupApp(options?: {
         return
       }
 
-      const payload = superjson.stringify(event)
+      const payload = rawMessage
       const allowBypass = options?.routing?.allowBypass !== false
       const shouldBypass = Boolean(event.route?.bypass && allowBypass && isDevtoolsPeer(p))
       const destinations = shouldBypass ? undefined : collectDestinations(event)
