@@ -805,6 +805,33 @@ interface SparkCommandEvent {
   destinations: Array<string>
 }
 
+/**
+ * Direct text-to-speech event - bypass LLM
+ * Send text directly to TTS pipeline for immediate speech + animation
+ */
+interface SpeakTextEvent {
+  /**
+   * Text to speak
+   */
+  text: string
+  /**
+   * Optional voice ID (uses default if not specified)
+   */
+  voiceId?: string
+  /**
+   * Optional emotion/personality hint
+   */
+  emotion?: 'neutral' | 'happy' | 'sad' | 'angry' | 'excited'
+  /**
+   * Optional speed multiplier (0.5 = half speed, 2.0 = double)
+   */
+  speed?: number
+  /**
+   * Optional metadata for tracking
+   */
+  metadata?: Record<string, unknown>
+}
+
 interface TransportConnectionHeartbeatEvent {
   kind: MessageHeartbeatKind
   message: MessageHeartbeat | string
@@ -866,6 +893,12 @@ export const outputGenAiChatComplete = defineEventa<OutputGenAiChatCompleteEvent
 export const sparkNotify = defineEventa<SparkNotifyEvent>('spark:notify')
 export const sparkEmit = defineEventa<SparkEmitEvent>('spark:emit')
 export const sparkCommand = defineEventa<SparkCommandEvent>('spark:command')
+
+/**
+ * Direct text-to-speech event - bypass LLM, speak immediately
+ * For OpenClaw integration and external TTS triggers
+ */
+export const speakText = defineEventa<SpeakTextEvent>('speak:text')
 
 export const transportConnectionHeartbeat = defineEventa<TransportConnectionHeartbeatEvent>('transport:connection:heartbeat')
 export const contextUpdate = defineEventa<ContextUpdateEvent>('context:update')
@@ -1031,6 +1064,11 @@ export interface ProtocolEvents<C = undefined> {
    * - Contextual hints: intent=context with contextPatch ideas/hints.
    */
   'spark:command': SparkCommandEvent
+  /**
+   * Direct text-to-speech - bypass LLM, speak immediately
+   * For OpenClaw integration: send text directly to TTS + animation
+   */
+  'speak:text': SpeakTextEvent
 
   'transport:connection:heartbeat': TransportConnectionHeartbeatEvent
 

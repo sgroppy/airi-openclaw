@@ -29,6 +29,7 @@ export const useModsServerChannelStore = defineStore('mods:channels:proj-airi:se
     'spark:notify',
     'spark:emit',
     'spark:command',
+    'speak:text', // OpenClaw direct TTS bypass
     'input:text',
     'input:text:voice',
     'output:gen-ai:chat:message',
