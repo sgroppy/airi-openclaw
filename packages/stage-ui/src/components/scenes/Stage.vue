@@ -496,6 +496,9 @@ onMounted(async () => {
 
   // Listen for lip sync events from OpenClaw
   window.addEventListener('airi:lipsync', handleLipSyncEvent as EventListener)
+
+  // Listen for speak:text audio events from OpenClaw
+  window.addEventListener('airi:speak:text:audio', handleSpeakTextAudio as EventListener)
 })
 
 function handleWaveEvent(event: CustomEvent<{ text: string, emotion?: string }>) {
@@ -520,6 +523,36 @@ function handleWaveEvent(event: CustomEvent<{ text: string, emotion?: string }>)
       }, 2000)
     }
   }
+}
+
+function handleSpeakTextAudio(event: CustomEvent<{ audioBuffer: ArrayBuffer, text: string }>) {
+  console.log('🔊 speak:text audio received, playing through Web Audio API')
+
+  // Convert ArrayBuffer to AudioBuffer and play
+  const arrayBuffer = event.detail.audioBuffer
+
+  // Decode and play
+  audioContext.decodeAudioData(arrayBuffer.slice(0), (audioBuffer) => {
+    const source = audioContext.createBufferSource()
+    currentAudioSource.value = source
+    source.buffer = audioBuffer
+
+    // Connect to output and lip sync
+    source.connect(audioContext.destination)
+    if (audioAnalyser.value)
+      source.connect(audioAnalyser.value)
+    if (lipSyncNode.value)
+      source.connect(lipSyncNode.value)
+
+    source.onended = () => {
+      currentAudioSource.value = undefined
+    }
+
+    source.start()
+    console.log('🔊 Audio playback started')
+  }, (err) => {
+    console.error('Failed to decode audio:', err)
+  })
 }
 
 function handleLipSyncEvent(event: CustomEvent<{ text: string, duration: number }>) {
@@ -597,6 +630,9 @@ onUnmounted(() => {
 
   // Clean up lip sync event listener
   window.removeEventListener('airi:lipsync', handleLipSyncEvent as EventListener)
+
+  // Clean up speak:text audio event listener
+  window.removeEventListener('airi:speak:text:audio', handleSpeakTextAudio as EventListener)
 })
 
 defineExpose({

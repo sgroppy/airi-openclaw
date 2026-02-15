@@ -221,26 +221,24 @@ export const useContextBridgeStore = defineStore('mods:api:context-bridge', () =
             },
           )
 
-          // Play audio through audio system
-          const blob = new Blob([audioBuffer], { type: 'audio/mpeg' })
-          const url = URL.createObjectURL(blob)
-          const audio = new Audio(url)
+          // Dispatch event for Stage.vue to handle audio playback with proper lip sync
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('airi:speak:text:audio', {
+              detail: { audioBuffer, text },
+            }))
+            console.log('🔊 Audio dispatched for playback')
+          }
 
           // Trigger speaking state for VRM animation
           nowSpeaking.value = true
 
-          audio.onended = () => {
+          // Reset after estimated duration (rough calculation: ~150ms per word)
+          const wordCount = text.split(/\s+/).length
+          const estimatedDuration = Math.max(2000, wordCount * 150)
+          setTimeout(() => {
             nowSpeaking.value = false
-            URL.revokeObjectURL(url)
-          }
-
-          audio.onerror = (err) => {
-            console.error('Audio playback error:', err)
-            nowSpeaking.value = false
-            URL.revokeObjectURL(url)
-          }
-
-          await audio.play()
+            console.log('🎭 VRM animation stopped')
+          }, estimatedDuration)
 
           console.log('✅ speak:text completed')
         }
