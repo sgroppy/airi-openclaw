@@ -293,6 +293,9 @@ defineExpose({
   setExpression: (expression: string, intensity = 1) => {
     modelRef.value?.setExpression(expression, intensity)
   },
+  setBlendShape: (name: string, value: number) => {
+    modelRef.value?.setBlendShape(name, value)
+  },
   setVrmFrameHook: (hook?: (vrm: VRM, delta: number) => void) => {
     vrmFrameHook.value = hook
     applyVrmFrameHook()

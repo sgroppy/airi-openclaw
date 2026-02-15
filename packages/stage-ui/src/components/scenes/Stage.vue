@@ -519,29 +519,41 @@ function handleLipSyncEvent(event: CustomEvent<{ text: string, duration: number 
   console.log('🎭 vrmViewerRef:', !!vrmViewerRef.value)
   console.log('🎭 stageModelRenderer:', stageModelRenderer.value)
 
-  // Animate mouth for VRM using setExpression
+  // Animate mouth for VRM using phoneme blend shapes
   if (vrmViewerRef.value && stageModelRenderer.value === 'vrm') {
-    console.log('🎭 Animating mouth with setExpression!')
+    console.log('🎭 Animating mouth with phonemes!')
 
-    // Use the exposed setExpression method
     const duration = event.detail.duration || 2000
-    const interval = 150
+    const interval = 120
     let elapsed = 0
+
+    // Phoneme sequence for lip sync: aa -> ee -> oo -> u -> aa
+    const phonemes = ['aa', 'ee', 'oh', 'ou', 'aa', 'ih']
+    let phonemeIndex = 0
 
     const animateMouth = setInterval(() => {
       elapsed += interval
 
-      // Alternate between surprised (mouth open) and neutral
-      if (Math.floor(elapsed / interval) % 2 === 0) {
-        vrmViewerRef.value?.setExpression?.('surprised', 0.6)
-      }
-      else {
-        vrmViewerRef.value?.setExpression?.('neutral', 0.3)
-      }
+      // Reset all phonemes
+      vrmViewerRef.value?.setBlendShape?.('aa', 0)
+      vrmViewerRef.value?.setBlendShape?.('ee', 0)
+      vrmViewerRef.value?.setBlendShape?.('ih', 0)
+      vrmViewerRef.value?.setBlendShape?.('oh', 0)
+      vrmViewerRef.value?.setBlendShape?.('ou', 0)
+
+      // Set current phoneme
+      const currentPhoneme = phonemes[phonemeIndex % phonemes.length]
+      vrmViewerRef.value?.setBlendShape?.(currentPhoneme, 0.7)
+      phonemeIndex++
 
       if (elapsed >= duration) {
         clearInterval(animateMouth)
-        vrmViewerRef.value?.setExpression?.('neutral', 1)
+        // Reset all
+        vrmViewerRef.value?.setBlendShape?.('aa', 0)
+        vrmViewerRef.value?.setBlendShape?.('ee', 0)
+        vrmViewerRef.value?.setBlendShape?.('ih', 0)
+        vrmViewerRef.value?.setBlendShape?.('oh', 0)
+        vrmViewerRef.value?.setBlendShape?.('ou', 0)
         console.log('🎭 Lip sync complete')
       }
     }, interval)

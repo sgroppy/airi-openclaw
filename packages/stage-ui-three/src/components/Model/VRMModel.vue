@@ -576,6 +576,10 @@ defineExpose({
   setExpression(expression: string, intensity = 1) {
     vrmEmote.value?.setEmotionWithResetAfter(expression, 1000, intensity)
   },
+  setBlendShape(name: string, value: number) {
+    // Direct blend shape control for phoneme lip sync
+    vrm.value?.expressionManager?.setValue(name, value)
+  },
   setVrmFrameHook(hook?: VrmFrameHook) {
     vrmFrameHook.value = hook
   },
