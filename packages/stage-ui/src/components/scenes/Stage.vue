@@ -501,16 +501,24 @@ onMounted(async () => {
 function handleWaveEvent(event: CustomEvent<{ text: string, emotion?: string }>) {
   console.log('👋 Wave event received:', event.detail)
 
-  // Trigger wave expression on VRM
+  // Trigger wave animation on VRM
   if (vrmViewerRef.value && stageModelRenderer.value === 'vrm') {
-    console.log('👋 Waving with happy expression!')
-    vrmViewerRef.value?.setExpression?.('happy', 1)
+    console.log('👋 Waving!')
 
-    // Reset after 2 seconds
-    setTimeout(() => {
-      vrmViewerRef.value?.setExpression?.('neutral', 1)
-      console.log('👋 Wave complete')
-    }, 2000)
+    // Try to play "cross_jumps" animation if available
+    const played = vrmViewerRef.value?.playAnimation?.('cross_jumps')
+    if (played) {
+      console.log('🎬 Playing cross_jumps animation!')
+    }
+    else {
+      // Fallback to expression
+      console.log('👋 Using expression fallback')
+      vrmViewerRef.value?.setExpression?.('happy', 1)
+      setTimeout(() => {
+        vrmViewerRef.value?.setExpression?.('neutral', 1)
+        console.log('👋 Wave complete')
+      }, 2000)
+    }
   }
 }
 

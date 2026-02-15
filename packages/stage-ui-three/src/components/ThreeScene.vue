@@ -296,6 +296,12 @@ defineExpose({
   setBlendShape: (name: string, value: number) => {
     modelRef.value?.setBlendShape(name, value)
   },
+  listAnimations: () => {
+    return modelRef.value?.listAnimations() || { gltf: [], vrma: [] }
+  },
+  playAnimation: (name: string) => {
+    return modelRef.value?.playAnimation(name) || false
+  },
   setVrmFrameHook: (hook?: (vrm: VRM, delta: number) => void) => {
     vrmFrameHook.value = hook
     applyVrmFrameHook()

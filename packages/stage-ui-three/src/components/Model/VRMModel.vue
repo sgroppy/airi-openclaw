@@ -580,6 +580,32 @@ defineExpose({
     // Direct blend shape control for phoneme lip sync
     vrm.value?.expressionManager?.setValue(name, value)
   },
+  listAnimations() {
+    // List available animations in the VRM
+    const gltfAnimations = (vrm.value as any)?.userData?.gltf?.animations || []
+    const vrmaAnimations = (vrm.value as any)?.userData?.vrmAnimations || []
+    return {
+      gltf: gltfAnimations.map((a: any) => a.name),
+      vrma: vrmaAnimations.map((a: any) => a.name),
+    }
+  },
+  playAnimation(name: string) {
+    // Play a specific animation by name
+    const gltf = (vrm.value as any)?.userData?.gltf
+    if (!gltf || !vrmAnimationMixer.value)
+      return false
+
+    const animation = gltf.animations?.find((a: any) => a.name === name)
+    if (!animation) {
+      console.warn(`Animation "${name}" not found in VRM`)
+      return false
+    }
+
+    const action = vrmAnimationMixer.value.clipAction(animation)
+    action.play()
+    console.log(`🎬 Playing animation: ${name}`)
+    return true
+  },
   setVrmFrameHook(hook?: VrmFrameHook) {
     vrmFrameHook.value = hook
   },
