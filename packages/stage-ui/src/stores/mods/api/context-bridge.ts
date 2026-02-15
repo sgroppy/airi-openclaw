@@ -175,6 +175,10 @@ export const useContextBridgeStore = defineStore('mods:api:context-bridge', () =
           // Dispatch custom event for wave animation
           window.dispatchEvent(new CustomEvent('airi:wave', { detail: { text, emotion: _emotion } }))
           console.log('👋 Wave event dispatched!')
+
+          // Dispatch event for lip sync animation (manual mouth movement)
+          window.dispatchEvent(new CustomEvent('airi:lipsync', { detail: { text, duration: 2000 } }))
+          console.log('🎭 Lip sync event dispatched!')
         }
 
         // Also trigger a visual alert for debugging (toggle with window.__AIRI_DEBUG_ALERT__ = true)

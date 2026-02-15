@@ -493,6 +493,9 @@ onMounted(async () => {
 
   // Listen for wave events from OpenClaw
   window.addEventListener('airi:wave', handleWaveEvent as EventListener)
+
+  // Listen for lip sync events from OpenClaw
+  window.addEventListener('airi:lipsync', handleLipSyncEvent as EventListener)
 })
 
 function handleWaveEvent(event: CustomEvent<{ text: string, emotion?: string }>) {
@@ -515,6 +518,41 @@ function handleWaveEvent(event: CustomEvent<{ text: string, emotion?: string }>)
           console.log('👋 Wave complete')
         }, 2000)
       }
+    }
+  }
+}
+
+function handleLipSyncEvent(event: CustomEvent<{ text: string, duration: number }>) {
+  console.log('🎭 Lip sync event received:', event.detail)
+
+  // Animate mouth for VRM
+  if (vrmViewerRef.value && stageModelRenderer.value === 'vrm') {
+    const vrm = (vrmViewerRef.value as any).vrm
+    if (vrm?.expressionManager) {
+      console.log('🎭 Animating mouth!')
+
+      // Simple mouth animation - open and close
+      const duration = event.detail.duration || 2000
+      const interval = 150 // Change mouth shape every 150ms
+      let elapsed = 0
+
+      const animateMouth = setInterval(() => {
+        elapsed += interval
+
+        // Alternate between open and closed
+        if (Math.floor(elapsed / interval) % 2 === 0) {
+          vrm.expressionManager.setValue('aa', 0.6) // Open mouth
+        }
+        else {
+          vrm.expressionManager.setValue('aa', 0.2) // Slightly closed
+        }
+
+        if (elapsed >= duration) {
+          clearInterval(animateMouth)
+          vrm.expressionManager.setValue('aa', 0) // Close mouth
+          console.log('🎭 Lip sync complete')
+        }
+      }, interval)
     }
   }
 }
@@ -545,6 +583,9 @@ onUnmounted(() => {
 
   // Clean up wave event listener
   window.removeEventListener('airi:wave', handleWaveEvent as EventListener)
+
+  // Clean up lip sync event listener
+  window.removeEventListener('airi:lipsync', handleLipSyncEvent as EventListener)
 })
 
 defineExpose({
