@@ -511,24 +511,25 @@ onMounted(async () => {
 function handleWaveEvent(event: CustomEvent<{ text: string, emotion?: string }>) {
   console.log('👋 Wave event received:', event.detail)
 
-  // Trigger wave animation on VRM
+  // Trigger wave/goodbye animation on VRM
   if (vrmViewerRef.value && stageModelRenderer.value === 'vrm') {
-    console.log('👋 Waving!')
+    console.log('👋 Playing goodbye animation!')
 
-    // Try to play "cross_jumps" animation if available
-    const played = vrmViewerRef.value?.playAnimation?.('cross_jumps')
-    if (played) {
-      console.log('🎬 Playing cross_jumps animation!')
-    }
-    else {
-      // Fallback to expression
-      console.log('👋 Using expression fallback')
-      vrmViewerRef.value?.setExpression?.('happy', 1)
-      setTimeout(() => {
-        vrmViewerRef.value?.setExpression?.('neutral', 1)
-        console.log('👋 Wave complete')
-      }, 2000)
-    }
+    // Play the goodbye VRMA animation
+    vrmViewerRef.value?.playExternalAnimation?.(animations.goodbye.toString()).then((played) => {
+      if (played) {
+        console.log('🎬 Goodbye animation playing!')
+      }
+      else {
+        // Fallback to expression
+        console.log('👋 Animation failed, using expression fallback')
+        vrmViewerRef.value?.setExpression?.('happy', 1)
+        setTimeout(() => {
+          vrmViewerRef.value?.setExpression?.('neutral', 1)
+          console.log('👋 Wave complete')
+        }, 2000)
+      }
+    })
   }
 }
 

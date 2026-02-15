@@ -24,6 +24,7 @@ import { useLoop, useTresContext } from '@tresjs/core'
 import { until, useMouse } from '@vueuse/core'
 import {
   AnimationMixer,
+  LoopOnce,
   MathUtils,
   Mesh,
   MeshPhysicalMaterial,
@@ -605,6 +606,41 @@ defineExpose({
     action.play()
     console.log(`🎬 Playing animation: ${name}`)
     return true
+  },
+  async playExternalAnimation(url: string) {
+    // Load and play external VRMA animation
+    if (!vrm.value || !vrmAnimationMixer.value) {
+      console.warn('VRM not loaded, cannot play external animation')
+      return false
+    }
+
+    try {
+      console.log('🎬 Loading external animation:', url)
+      const animation = await loadVRMAnimation(url)
+      if (!animation) {
+        console.warn('Failed to load animation')
+        return false
+      }
+
+      const clip = await clipFromVRMAnimation(vrm.value, animation)
+      if (!clip) {
+        console.warn('Failed to create clip from animation')
+        return false
+      }
+
+      reAnchorRootPositionTrack(clip, vrm.value)
+
+      const action = vrmAnimationMixer.value.clipAction(clip)
+      action.setLoop(LoopOnce, 1) // Play once, don't loop
+      action.clampWhenFinished = true
+      action.play()
+      console.log('🎬 Playing external animation!')
+      return true
+    }
+    catch (err) {
+      console.error('Error playing external animation:', err)
+      return false
+    }
   },
   setVrmFrameHook(hook?: VrmFrameHook) {
     vrmFrameHook.value = hook

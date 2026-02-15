@@ -302,6 +302,9 @@ defineExpose({
   playAnimation: (name: string) => {
     return modelRef.value?.playAnimation(name) || false
   },
+  playExternalAnimation: (url: string) => {
+    return modelRef.value?.playExternalAnimation(url) || Promise.resolve(false)
+  },
   setVrmFrameHook: (hook?: (vrm: VRM, delta: number) => void) => {
     vrmFrameHook.value = hook
     applyVrmFrameHook()
