@@ -31,8 +31,21 @@ export const useContextBridgeStore = defineStore('mods:api:context-bridge', () =
   const serverChannelStore = useModsServerChannelStore()
   const consciousnessStore = useConsciousnessStore()
   const speechStore = useSpeechStore()
+  const speakingStore = useSpeakingStore()
   const providersStore = useProvidersStore()
   const { activeProvider, activeModel } = storeToRefs(consciousnessStore)
+
+  // Destructure speech store refs for direct access
+  const {
+    activeSpeechProvider,
+    activeSpeechVoiceId,
+    activeSpeechModel,
+    pitch,
+    rate,
+  } = storeToRefs(speechStore)
+
+  // Destructure speaking store for VRM animation control
+  const { nowSpeaking } = storeToRefs(speakingStore)
 
   const { post: broadcastContext, data: incomingContext } = useBroadcastChannel<ContextMessage, ContextMessage>({ name: CONTEXT_CHANNEL_NAME })
   const { post: broadcastStreamEvent, data: incomingStreamEvent } = useBroadcastChannel<ChatStreamEvent, ChatStreamEvent>({ name: CHAT_STREAM_CHANNEL_NAME })
@@ -149,7 +162,7 @@ export const useContextBridgeStore = defineStore('mods:api:context-bridge', () =
 
       // Handle speak:text event - direct TTS bypass (OpenClaw integration)
       disposeHookFns.value.push(serverChannelStore.onEvent('speak:text', async (event) => {
-        const { text, voiceId, emotion, speed, metadata } = event.data
+        const { text, voiceId, emotion: _emotion, speed, metadata: _metadata } = event.data
 
         console.log('🎙️ speak:text received:', text.substring(0, 50))
 
@@ -161,15 +174,15 @@ export const useContextBridgeStore = defineStore('mods:api:context-bridge', () =
 
         try {
           // Get speech provider
-          const speechProvider = await providersStore.getProviderInstance<any>(speechStore.activeSpeechProvider)
+          const speechProvider = await providersStore.getProviderInstance<any>(activeSpeechProvider.value)
           if (!speechProvider) {
             console.error('Failed to get speech provider')
             return
           }
 
           // Use provided voice or fallback to configured voice
-          const voice = voiceId || speechStore.activeSpeechVoiceId.value
-          const model = speechStore.activeSpeechModel.value
+          const voice = voiceId || activeSpeechVoiceId.value
+          const model = activeSpeechModel.value
 
           // Generate speech
           const audioBuffer = await speechStore.speech(
@@ -178,8 +191,8 @@ export const useContextBridgeStore = defineStore('mods:api:context-bridge', () =
             text,
             voice,
             {
-              speed: speed || speechStore.rate.value,
-              pitch: speechStore.pitch.value,
+              speed: speed || rate.value,
+              pitch: pitch.value,
             },
           )
 
@@ -189,17 +202,16 @@ export const useContextBridgeStore = defineStore('mods:api:context-bridge', () =
           const audio = new Audio(url)
 
           // Trigger speaking state for VRM animation
-          const speakingStore = useSpeakingStore()
-          speakingStore.startSpeaking()
+          nowSpeaking.value = true
 
           audio.onended = () => {
-            speakingStore.stopSpeaking()
+            nowSpeaking.value = false
             URL.revokeObjectURL(url)
           }
 
           audio.onerror = (err) => {
             console.error('Audio playback error:', err)
-            speakingStore.stopSpeaking()
+            nowSpeaking.value = false
             URL.revokeObjectURL(url)
           }
 
