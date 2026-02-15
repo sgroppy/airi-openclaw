@@ -524,10 +524,15 @@ function handleWaveEvent(event: CustomEvent<{ text: string, emotion?: string }>)
 
 function handleLipSyncEvent(event: CustomEvent<{ text: string, duration: number }>) {
   console.log('🎭 Lip sync event received:', event.detail)
+  console.log('🎭 vrmViewerRef:', !!vrmViewerRef.value)
+  console.log('🎭 stageModelRenderer:', stageModelRenderer.value)
 
   // Animate mouth for VRM
   if (vrmViewerRef.value && stageModelRenderer.value === 'vrm') {
     const vrm = (vrmViewerRef.value as any).vrm
+    console.log('🎭 VRM:', !!vrm)
+    console.log('🎭 expressionManager:', !!vrm?.expressionManager)
+
     if (vrm?.expressionManager) {
       console.log('🎭 Animating mouth!')
 
